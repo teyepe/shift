@@ -109,6 +109,11 @@
   --editor-text-component-overlay-hover-b: rgba(255, 151, 186, 0.4);
 }
 
+/* Unstyled text follows the theme instead of the browser's color-scheme default. */
+body {
+  color: var(--color-primary);
+}
+
 /* Hide scrollbar while preserving scroll behavior */
 @utility scrollbar-hidden {
   scrollbar-width: none;
