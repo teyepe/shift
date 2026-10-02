@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.1.2](https://github.com/shift-editor/shift/compare/v0.1.1...v0.1.2) (2026-10-02)
+
+
+### Features
+
+* **editor:** show contour direction and first point in the object tree ([#485](https://github.com/shift-editor/shift/issues/485)) ([d641450](https://github.com/shift-editor/shift/commit/d6414501aa94c4ff626b3a3b6dcc9273425e5844))
+
 ## [0.1.1](https://github.com/shift-editor/shift/compare/v0.1.0...v0.1.1) (2026-10-01)
 
 
