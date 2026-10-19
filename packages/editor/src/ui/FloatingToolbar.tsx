@@ -5,19 +5,24 @@ import { useSignalState } from "../lib/signals";
 import type { ToolbarDock, ToolbarDragState } from "../types/toolbar";
 import { SLOT_FRAME, ToolbarBar } from "./ToolbarBar";
 import { BAR_THICKNESS } from "./toolbarGeometry";
-import { toolbarBarOrigin, toolbarLift, toolbarToolOpacity } from "./toolbarDrag";
+import { toolbarBarOrigin, toolbarLift } from "./toolbarDrag";
 import { TOOLBAR_DOCKS, fitDockToFrame, poseForDock } from "./toolbarPose";
 import { readToolbarDock, writeToolbarDock } from "./toolbarStorage";
 import { ToolbarZonesOverlay } from "./ToolbarZonesOverlay";
 import { useToolbarDrag } from "./useToolbarDrag";
 import { useToolbarMetrics } from "./useToolbarMetrics";
 
-/** A thin line along the whole of each canvas edge, marking where the bar lands on release. */
-const EDGE_LINE_POSITION: Record<ToolbarDock, string> = {
-  top: "inset-x-0 top-0 h-0.5",
-  bottom: "inset-x-0 bottom-0 h-0.5",
-  left: "inset-y-0 left-0 w-0.5",
-  right: "inset-y-0 right-0 w-0.5",
+/**
+ * Glow along the whole of each canvas edge, marking where the bar lands on release:
+ * a solid accent line on the edge itself and a gradient that fades to nothing as it
+ * runs inward. The line alone vanishes against the window's bezel on the bottom edge;
+ * the fade gives it a soft body that reads on either side of the edge.
+ */
+const EDGE_GLOW: Record<ToolbarDock, string> = {
+  top: "inset-x-0 top-0 h-2 border-t-1 bg-linear-to-b",
+  bottom: "inset-x-0 bottom-0 h-2 border-b-1 bg-linear-to-t",
+  left: "inset-y-0 left-0 w-2 border-l-1 bg-linear-to-r",
+  right: "inset-y-0 right-0 w-2 border-r-1 bg-linear-to-l",
 };
 
 /** Strong ease-out; ease-in would hold the old bar just as the eye looks at it. */
@@ -108,9 +113,9 @@ export function FloatingToolbar({ editor }: FloatingToolbarProps) {
               aria-hidden="true"
               style={PREVIEW_STYLE}
               className={cn(
-                "absolute bg-accent transition-opacity duration-150",
+                "absolute border-accent from-accent/20 to-transparent/10 transition-opacity duration-150",
                 shown ? "opacity-100" : "opacity-0",
-                EDGE_LINE_POSITION[edge],
+                EDGE_GLOW[edge],
               )}
             />
             {/* Outlines exactly where the bar will sit, sized for that edge's orientation. */}
@@ -138,7 +143,6 @@ export function FloatingToolbar({ editor }: FloatingToolbarProps) {
         followStyle={followStyleOf(drag, slot)}
         dragging={drag !== null}
         lift={toolbarLift(drag)}
-        toolOpacity={toolbarToolOpacity(drag)}
         onGripPointerDown={onGripPointerDown}
       />
     </div>

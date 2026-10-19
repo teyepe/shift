@@ -8,7 +8,6 @@ import type {
 } from "../types/toolbar";
 import { BAR_THICKNESS, clampHandleToFrame, dockRegionAt } from "./toolbarGeometry";
 import { allowedDocksInFrame, isShortToolbarFrame, poseForDock } from "./toolbarPose";
-import { TOOL_FLOOR_OPACITY } from "./toolbarPresence";
 
 /** How far a steering point may stray from the target's region before a neighbouring region takes over. */
 export const REGION_MARGIN = BAR_THICKNESS / 2;
@@ -229,22 +228,6 @@ export function nextToolbarDrag(
 /** Top-left corner of the carried bar, so its handle sits where the pointer holds it. */
 export function toolbarBarOrigin(drag: ToolbarDragState): Point2D {
   return { x: drag.handle.x - drag.handleInBar.x, y: drag.handle.y - drag.handleInBar.y };
-}
-
-/**
- * Opacity of the tools while the bar is carried.
- *
- * @remarks
- * The tools dim while the target slot would turn the bar on release, warning
- * of the turn before the pointer lets go, and are fully visible otherwise.
- * The turn itself dips them further.
- */
-export function toolbarToolOpacity(drag: ToolbarDragState | null): number {
-  if (!drag) return 1;
-
-  const turns = poseForDock(drag.target) !== poseForDock(drag.seatDock);
-
-  return turns ? TOOL_FLOOR_OPACITY : 1;
 }
 
 /** How far the bar is raised: lifted while carried, resting once docked. */

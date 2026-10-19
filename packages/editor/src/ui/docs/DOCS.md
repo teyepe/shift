@@ -20,16 +20,16 @@ The tools bar that floats over the canvas, docked to an edge the user picks by d
 
 ```
 ui/
-├── FloatingToolbar.tsx   — overlay, target edge line and landing outline, wires the hooks to the bar
+├── FloatingToolbar.tsx   — overlay, target edge glow and landing outline, wires the hooks to the bar
 ├── ToolbarZonesOverlay.tsx — debug view of the dock regions, centre square halves, the carried bar with its handle and tip, their margins and the docks claiming it
 ├── ToolbarBar.tsx        — the bar itself, FLIP slide and turn about the handle, tools dip
 ├── ToolsPane.tsx         — the tool buttons and their menus, in either orientation
 ├── useToolbarDrag.ts     — pointer tracking and the guards that always end a drag
 ├── useToolbarMetrics.ts  — measured canvas and bar size
-├── toolbarDrag.ts        — drag state transitions: tether, region steering, lift, tools opacity
+├── toolbarDrag.ts        — drag state transitions: tether, region steering, lift
 ├── toolbarPose.ts        — dock to pose, which docks fit, the shown dock
 ├── toolbarGeometry.ts    — dock regions, centre square halves and handle clamping
-├── toolbarPresence.ts    — tools opacity constants and the turn's dip keyframes
+├── toolbarPresence.ts    — the turn's tools dip keyframes
 ├── toolbarStorage.ts     — remembered dock
 └── springEasing.ts       — a spring baked into a CSS `linear()` easing
 ```
@@ -41,7 +41,7 @@ ui/
 
 ## How it works
 
-A drag starts tethered: the bar stays in its slot until the pointer has moved `TEAR_DISTANCE` (half the bar's thickness), then follows the pointer with the handle clamped inside the frame. The rest of the bar may overflow, and the panel clips it. The bar lifts for the whole drag. Once it is loose, a thin accent line runs along the target edge with a dashed outline where the bar will sit, and the tools dim while that target would turn the bar.
+A drag starts tethered: the bar stays in its slot until the pointer has moved `TEAR_DISTANCE` (half the bar's thickness), then follows the pointer with the handle clamped inside the frame. The rest of the bar may overflow, and the panel clips it. The bar lifts for the whole drag. Once it is loose, a glow runs along the target edge, an accent line on the edge itself fading inward to nothing, with a dashed outline where the bar will sit. The tools stay fully visible for the whole drag: dimming them as the bar neared a target, first only for turns and then toward every change of target, added noise without telling the user anything the glow does not. They dip only through the turn itself, on release.
 
 On release `useToolbarDrag` calls `onDock(drag.target)`. `ToolbarBar` sees the new slot and pose, lays itself out in the new place at once, and animates a slide and a turn from where it was drawn, with the tools dipping through the turn.
 
