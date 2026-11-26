@@ -94,14 +94,15 @@ fn try_nib_expand_closed(input: &NibStrokeInput, tolerance: f64) -> Option<BezPa
         map_path(&expanded, rotate_out)
     };
 
+    // Do NOT reverse the skeleton for the right edge.  `expand_closed_diagonal` calls
+    // `expand_path`, which flips the sign for CCW paths (area ≥ 0), so a negative
+    // `expand` (right < 0) becomes a positive expansion outward.  Reversing would
+    // produce a CW path, suppress the sign flip, and push both edges inward.
     let mut right_edge = if right.abs() < 1e-12 {
         skeleton.clone()
     } else {
         let expand = Diagonal2::new(a * right / half_w, b * right / half_w);
-        let reversed = skeleton.reverse_subpaths();
-        let rotated_rev = map_path(&reversed, rotate_in);
-        let expanded =
-            expand_closed_diagonal(&rotated_rev, expand, join, input.miter_limit, tolerance);
+        let expanded = expand_closed_diagonal(&rotated, expand, join, input.miter_limit, tolerance);
         map_path(&expanded, rotate_out)
     };
     right_edge = right_edge.reverse_subpaths();
@@ -558,6 +559,82 @@ mod tests {
             return 1.0;
         }
         differ as f64 / total as f64
+    }
+
+    /// A centred eccentric nib on a closed circle must produce an outline whose
+    /// bounding box is LARGER than the skeleton, not smaller or degenerate.
+    /// Before the closed-path fix, the right edge used a reversed (CW) skeleton so
+    /// both edges contracted inward and the bbox was smaller than the skeleton.
+    #[test]
+    fn eccentric_nib_closed_path_outline_is_wider_than_skeleton() {
+        // Circle of radius 50 (the o-bowl fixture skeleton).
+        let skeleton = circle(50.0);
+        let skeleton_bbox = skeleton.bounding_box();
+        let nib = NibShape {
+            width: 24.0,
+            height: 12.0,
+            angle: 0.0,
+        };
+        let input = NibStrokeInput {
+            path: &skeleton,
+            nib,
+            overrides: &[],
+            cap: StrokeCap::Round,
+            join: StrokeJoin::Round,
+            miter_limit: 4.0,
+            position: 0.0,
+        };
+        let outline = nib_outline(&input, DEFAULT_TOLERANCE);
+        let bbox = outline.bounding_box();
+        // Outer edge expands by ≈ nib.width/2 = 12 horizontally, so total width ≈ 100 + 24 = 124.
+        // Before the fix both edges shrank inward, producing bbox.width() ≈ 76.
+        assert!(
+            bbox.width() > skeleton_bbox.width(),
+            "outline width {:.1} should exceed skeleton width {:.1} (outer edge expands outward)",
+            bbox.width(),
+            skeleton_bbox.width()
+        );
+        assert!(
+            bbox.height() > skeleton_bbox.height(),
+            "outline height {:.1} should exceed skeleton height {:.1}",
+            bbox.height(),
+            skeleton_bbox.height()
+        );
+    }
+
+    /// The closed-path stroke must have an inner ring (hollow centre) and an outer ring.
+    /// A point inside the inner edge must NOT be filled; a point between the two edges MUST be.
+    #[test]
+    fn eccentric_nib_closed_path_has_inner_and_outer_rings() {
+        let skeleton = circle(50.0); // CCW, centred at origin
+        let nib = NibShape {
+            width: 24.0,
+            height: 12.0,
+            angle: 0.0,
+        };
+        let input = NibStrokeInput {
+            path: &skeleton,
+            nib,
+            overrides: &[],
+            cap: StrokeCap::Round,
+            join: StrokeJoin::Round,
+            miter_limit: 4.0,
+            position: 0.0,
+        };
+        let outline = nib_outline(&input, DEFAULT_TOLERANCE);
+        // The skeleton radius is 50; outer edge ≈ 62; inner edge ≈ 38.
+        // Centre (0, 0) must be hollow (winding = 0).
+        assert_eq!(
+            outline.winding(kurbo::Point::new(0.0, 0.0)),
+            0,
+            "centre must be hollow (inner ring encloses it)"
+        );
+        // A point at radius 50 (on the skeleton) must be filled.
+        assert_ne!(
+            outline.winding(kurbo::Point::new(50.0, 0.0)),
+            0,
+            "point on skeleton radius must be inside the stroke ring"
+        );
     }
 
     /// An eccentric nib on an open path (H-stem) must produce an outline whose
