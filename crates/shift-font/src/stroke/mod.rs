@@ -1,7 +1,9 @@
 //! Stroke solvers and layer lib metadata (F0.1 / F0.3).
 
+pub mod cusp_detection;
 pub mod exact_offset;
 pub mod extent_memo;
+pub mod g1_correction;
 pub mod ink;
 pub mod ink_bounds;
 pub mod ink_fit;
@@ -10,10 +12,17 @@ pub mod interpolated;
 pub mod layer_edit;
 pub mod layer_lib;
 pub mod live_stroke;
+pub mod nib_caps;
+pub mod nib_joins;
+pub mod nib_resolve;
+pub mod nib_shape;
+pub mod nib_solver;
+pub mod offset_strategy;
 pub mod position;
 pub mod preset_lib;
 pub mod solve_cache;
 pub mod style;
+pub(crate) mod strategy;
 
 pub use exact_offset::{
     DEFAULT_TOLERANCE, ExactStrokeStyle, count_cubics, count_on_curve, outline, path_bbox,

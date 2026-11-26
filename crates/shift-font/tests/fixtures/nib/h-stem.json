@@ -1,0 +1,8 @@
+{
+  "name": "h-stem",
+  "description": "Vertical stem for contrast nib (METAFONT-style skeleton)",
+  "path_d": "M 0 0 L 0 200",
+  "nib_width": 30.0,
+  "nib_height": 6.0,
+  "nib_angle": 0.78539816339
+}

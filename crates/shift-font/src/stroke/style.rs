@@ -1,6 +1,7 @@
 //! Packable stroke style fields for intents and future bridge DTOs.
 
 use super::exact_offset::ExactStrokeStyle;
+use super::nib_shape::NibShape;
 use crate::{CoreError, CoreResult};
 use kurbo::{Cap, Join};
 
@@ -111,5 +112,14 @@ impl OutlineStrokeStyle {
             miter_limit: self.miter_limit,
             position: self.position,
         }
+    }
+
+    /// The nib for this style.
+    ///
+    /// Returns a circular nib matching the stroke width.  When a dedicated
+    /// `nib` field is added to this struct (stream B T3), replace this body
+    /// with `self.nib`.
+    pub fn effective_nib(self) -> NibShape {
+        NibShape::circular(self.width)
     }
 }

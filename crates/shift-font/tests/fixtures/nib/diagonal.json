@@ -1,0 +1,8 @@
+{
+  "name": "diagonal",
+  "description": "Open diagonal for open-path offset strategies",
+  "path_d": "M 0 0 L 180 120",
+  "nib_width": 20.0,
+  "nib_height": 8.0,
+  "nib_angle": -0.39269908169
+}

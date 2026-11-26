@@ -16,8 +16,8 @@
 //! shape at three times the points; the spike compares them.)
 
 use kurbo::{
-    Arc, BezPath, Cap, CubicBez, Join, ParamCurve, PathEl, PathSeg, Point, Vec2,
-    offset::offset_cubic,
+    Arc, BezPath, Cap, CubicBez, Diagonal2, Join, ParamCurve, PathEl, PathSeg, Point, Vec2,
+    expand_path, offset::offset_cubic,
 };
 
 use super::exact_offset::{ExactStrokeStyle, centred_outline};
@@ -144,6 +144,21 @@ fn add_cap(
 /// The parallel curve of `path` at signed `distance`: positive to the left of
 /// the direction of travel, negative to the right.
 ///
+/// Expand a **closed** path diagonally using kurbo's `expand_path`.
+///
+/// Rotates the path into a canonical frame, calls `expand_path`, then rotates
+/// back — the caller supplies the rotation and the expansion scale.  Used by
+/// the nib solver's closed-contour fast path.
+pub(crate) fn expand_closed_diagonal(
+    path: &BezPath,
+    expand: Diagonal2,
+    join: Join,
+    miter_limit: f64,
+    tolerance: f64,
+) -> BezPath {
+    expand_path(path, expand, join, miter_limit, tolerance)
+}
+
 /// Every subpath keeps its openness. Where the offset opens a gap at a corner
 /// it is filled as `join` says; where it overlaps, the two offset segments
 /// meet in a line, as kurbo's stroker does, and a nonzero fill reads it right.
@@ -313,6 +328,11 @@ fn offset_subpath(
 
 /// Unit tangents at the start and the end of `segment`, taken from the first
 /// control point that is not on the end, as a stroke does.
+/// Unit start and end tangents of `segment`; available to nib solver modules.
+pub(crate) fn unit_tangents_for_segment(segment: &PathSeg) -> (Vec2, Vec2) {
+    unit_tangents(segment)
+}
+
 fn unit_tangents(segment: &PathSeg) -> (Vec2, Vec2) {
     let (start, end) = match *segment {
         PathSeg::Line(line) => (line.p1 - line.p0, line.p1 - line.p0),
@@ -395,7 +415,7 @@ fn is_straight(cubic: &CubicBez, tolerance: f64) -> bool {
 /// Connects the offset of the segment ending at `corner` to the offset of the
 /// one starting there.
 #[allow(clippy::too_many_arguments)]
-fn add_join(
+pub(crate) fn add_join(
     result: &mut BezPath,
     corner: Point,
     end_tangent: Vec2,
